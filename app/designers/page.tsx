@@ -261,7 +261,7 @@ export default function Designers() {
                 </div>
                 <div className="bc-info">
                   <div className="bc-header">
-                    <span className="bc-name">{brand.name}</span>
+                    <a href="/designers/artisan-interiors" style={{textDecoration:'none', color:'inherit'}}><span className="bc-name">{brand.name}</span></a>
                     <span className="bc-verified"><VerifiedIcon /> Verified</span>
                   </div>
                   <div className="bc-rating-row">
@@ -278,7 +278,7 @@ export default function Designers() {
                   <p className="bc-snippet">{brand.snippet}</p>
                 </div>
                 <div className="bc-cta">
-                  <button className="bc-cta-btn">Book Free Consultation</button>
+                  <button className="bc-cta-btn" onClick={() => window.location.href='/designers/artisan-interiors'}>Book Free Consultation</button>
                   <div className="bc-meeting-types">
                     {brand.meeting.map(m => <span className="bc-mt" key={m}>{m}</span>)}
                   </div>
