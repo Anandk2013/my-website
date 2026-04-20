@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeChips, setActiveChips] = useState<string[]>([]);
 
@@ -64,9 +66,9 @@ export default function Home() {
   ];
 
   const testimonials = [
-    { quote: 'Found an amazing designer through Inzario for our 3BHK in Whitefield. No spam calls, just a great consultation. The designer understood our budget and style perfectly.', name: 'Priya S.', loc: 'Whitefield, Bangalore', initials: 'PS' },
+    { quote: 'Found an amazing designer through Inzario for our 3BHK in Whitefield. No spam calls, just a great consultation.', name: 'Priya S.', loc: 'Whitefield, Bangalore', initials: 'PS' },
     { quote: 'After getting bombarded with calls on other platforms, Inzario was a breath of fresh air. Compared three designers side-by-side and booked a video call within minutes.', name: 'Rahul K.', loc: 'HSR Layout, Bangalore', initials: 'RK' },
-    { quote: 'The Budget Estimator alone saved us weeks of back-and-forth. We knew exactly what to expect before our first meeting. Highly recommend Inzario to anyone doing up their home.', name: 'Anita M.', loc: 'Sarjapur Road, Bangalore', initials: 'AM' },
+    { quote: 'The Budget Estimator alone saved us weeks of back-and-forth. Highly recommend Inzario to anyone doing up their home.', name: 'Anita M.', loc: 'Sarjapur Road, Bangalore', initials: 'AM' },
   ];
 
   const ArrowIcon = () => (
@@ -124,7 +126,7 @@ export default function Home() {
       {/* MOBILE MENU */}
       <div className={`mobile-menu${mobileMenuOpen ? ' active' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) setMobileMenuOpen(false); }}>
         <div className="mobile-menu-panel">
-          <button className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+          <button className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
@@ -182,7 +184,7 @@ export default function Home() {
                   <option>₹40L+</option>
                 </select>
               </div>
-              <button className="hsp-go-btn">
+              <button className="hsp-go-btn" onClick={() => router.push('/designers')}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                 </svg>
@@ -252,7 +254,7 @@ export default function Home() {
               <div className="section-label">Curated For You</div>
               <div className="section-title">Top-Rated Interior Brands in Bangalore</div>
             </div>
-            <a href="#" className="view-all">View All Brands <ArrowIcon /></a>
+            <a href="/designers" className="view-all">View All Brands <ArrowIcon /></a>
           </div>
           <div className="brands-scroll">
             {brands.map(brand => (
@@ -269,7 +271,7 @@ export default function Home() {
                   </div>
                   <div className="brand-location"><PinIcon /> {brand.location}</div>
                   <div className="brand-tags">{brand.tags.map(tag => <span className="brand-tag" key={tag}>{tag}</span>)}</div>
-                  <a href="#" className="brand-book-link">Book Free Consultation <ArrowIcon /></a>
+                  <a href="/designers" className="brand-book-link">Book Free Consultation <ArrowIcon /></a>
                 </div>
               </div>
             ))}
@@ -386,7 +388,7 @@ export default function Home() {
               <ul>
                 <li><a href="#">How It Works</a></li>
                 <li><a href="#">Budget Estimator</a></li>
-                <li><a href="#">Top Brands</a></li>
+                <li><a href="/designers">Top Brands</a></li>
                 <li><a href="#">For Brands</a></li>
               </ul>
             </div>
