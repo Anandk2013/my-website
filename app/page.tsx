@@ -318,7 +318,7 @@ export default function Home() {
               <p>Use our free Budget Estimator to get a detailed room-by-room cost breakdown for your home — no signup needed.</p>
             </div>
             <div className="budget-cta">
-              <a href="#">Estimate Your Budget <ArrowIcon /></a>
+              <a href="/budget-estimator">Estimate Your Budget <ArrowIcon /></a>
             </div>
           </div>
         </div>
