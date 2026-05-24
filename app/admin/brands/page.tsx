@@ -177,7 +177,7 @@ export default function AdminBrandsPage() {
               <table className="adm-tbl">
                 <thead>
                   <tr>
-                    <th>Customer</th><th>Phone</th><th>City</th>
+                    <th>Customer</th><th>Phone</th>
                     <th>Bookings</th><th>Reviews</th><th>Flags</th>
                     <th>Status</th><th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
@@ -198,7 +198,6 @@ export default function AdminBrandsPage() {
                           </div>
                         </td>
                         <td style={{ fontSize: 13, color: 'var(--ink-3)' }}>{c.phone}</td>
-                        <td>{c.city}</td>
                         <td><strong>{c.bookings}</strong></td>
                         <td>{c.reviews}</td>
                         <td>
@@ -297,30 +296,11 @@ export default function AdminBrandsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {FLAGGED.map(f => (
-                    <tr key={f.id} style={{ background: 'rgba(220,38,38,.03)' }}>
-                      <td>
-                        <div className="adm-user-cell">
-                          <div className="adm-u-avatar flagged">{f.initials}</div>
-                          <div>
-                            <div className="adm-u-name">{f.name}</div>
-                            <div className="adm-u-contact">{f.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ fontSize: 13, color: 'var(--ink-3)' }}>{f.phone}</td>
-                      <td>{f.bookings}</td>
-                      <td><span className="adm-pill flag">{f.reports} reports</span></td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{f.brands}</td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{f.firstFlagged}</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: 5, justifyContent: 'flex-end' }}>
-                          <button className="adm-act-btn view" onClick={() => openDrawer('customer')}>👁️ Review</button>
-                          <button className="adm-act-btn suspend" onClick={() => { setModal(true); document.body.style.overflow = 'hidden'; }}>🚫 Suspend</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  <tr>
+                    <td colSpan={7} style={{ padding: '32px 0', textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>
+                      No flagged users yet.
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
