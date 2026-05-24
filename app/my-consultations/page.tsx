@@ -16,6 +16,8 @@ type Booking = {
   budget_range: string | null;
   notes: string | null;
   homeowner_name: string;
+  review_rating: number | null;
+  reviewed_at: string | null;
   created_at: string;
   brands: {
     name: string;
@@ -73,10 +75,12 @@ export default function MyConsultationsPage() {
       if (!session) { router.replace('/login?returnTo=/my-consultations'); return; }
       const { data } = await supabase
         .from('bookings')
-        .select('id, meeting_type, status, preferred_date, preferred_time, project_type, budget_range, notes, homeowner_name, created_at, brands(name, slug, logo_initials, location, rating, cover_gradient, address)')
-        .eq('homeowner_email', session.user.email!)
+        .select('id, meeting_type, status, preferred_date, preferred_time, project_type, budget_range, notes, homeowner_name, review_rating, reviewed_at, created_at, brands(name, slug, logo_initials, location, rating, cover_gradient, address)')
+        .or(`homeowner_id.eq.${session.user.id},homeowner_email.eq.${session.user.email}`)
         .order('created_at', { ascending: false });
-      setBookings((data as unknown as Booking[]) ?? []);
+      const rows = (data as unknown as Booking[]) ?? [];
+      setBookings(rows);
+      setReviewedIds(new Set(rows.filter(b => b.reviewed_at).map(b => b.id)));
       setLoading(false);
     });
   }, []);
@@ -111,7 +115,17 @@ export default function MyConsultationsPage() {
     setReviewDone(false);
   }
 
-  function handleReviewSubmit() {
+  async function handleReviewSubmit() {
+    const supabase = createClient();
+    await supabase
+      .from('bookings')
+      .update({
+        review_rating: reviewStars,
+        review_text: reviewText,
+        recommend: recommend === 'yes',
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', reviewModal.bookingId);
     setReviewDone(true);
     setReviewedIds(prev => new Set(prev).add(reviewModal.bookingId));
   }

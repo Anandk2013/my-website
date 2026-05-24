@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import BrandPageClient from './BrandPageClient'
 
 export default async function BrandPage({
@@ -8,7 +8,7 @@ export default async function BrandPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const supabase = createClient()
+  const supabase = await createServerSupabaseClient()
 
   const { data: brand } = await supabase
     .from('brands')

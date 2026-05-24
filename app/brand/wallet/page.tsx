@@ -17,14 +17,30 @@ const COMPARE_ROWS = [
   { feature: 'Priority Support', free: false, pro: true },
 ];
 
+type TxnRow = {
+  id: string;
+  date: string;
+  type: string;
+  desc: string;
+  amount: number;
+};
+
+const MEETING_FEE: Record<string, Record<string, number>> = {
+  pro: { video_call: 2000, site_visit: 2500, experience_center: 3500 },
+  free: { video_call: 4000, site_visit: 5000, experience_center: 7000 },
+};
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export default function BrandWalletPage() {
   const [brandName, setBrandName] = useState('');
   const [planType, setPlanType] = useState('free');
   const [walletBalance, setWalletBalance] = useState(0);
+  const [transactions, setTransactions] = useState<TxnRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [activePage, setActivePage] = useState(1);
-  const [dateFilter, setDateFilter] = useState('All Dates');
   const [typeFilter, setTypeFilter] = useState('All Types');
 
   useEffect(() => {
@@ -34,7 +50,7 @@ export default function BrandWalletPage() {
 
       const { data: brand } = await supabase
         .from('brands')
-        .select('name, plan_type, wallet_balance')
+        .select('id, name, plan_type, wallet_balance')
         .eq('auth_user_id', session.user.id)
         .single();
 
@@ -42,6 +58,25 @@ export default function BrandWalletPage() {
         setBrandName(brand.name ?? '');
         setPlanType(brand.plan_type ?? 'free');
         setWalletBalance(brand.wallet_balance ?? 0);
+
+        // Derive transaction history from bookings until wallet_transactions table exists
+        const { data: meetings } = await supabase
+          .from('bookings')
+          .select('id, meeting_type, homeowner_name, status, created_at')
+          .eq('brand_id', brand.id)
+          .neq('status', 'cancelled')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        const plan = brand.plan_type ?? 'free';
+        const rows: TxnRow[] = (meetings ?? []).map(m => ({
+          id: m.id,
+          date: fmtDate(m.created_at),
+          type: 'Meeting Fee',
+          desc: `${m.meeting_type.replace(/_/g, ' ')} — ${m.homeowner_name}`,
+          amount: -(MEETING_FEE[plan]?.[m.meeting_type] ?? 0),
+        }));
+        setTransactions(rows);
       }
       setLoading(false);
     });
@@ -125,23 +160,40 @@ export default function BrandWalletPage() {
           </div>
         </div>
 
-        {/* Transactions — hardcoded until wallet_transactions table is created */}
+        {/* Transactions */}
         <div className="wlt-section-card">
           <div className="wlt-sc-header">
             <div className="wlt-sc-title">💰 Transactions</div>
-            <button className="wlt-sc-btn" onClick={() => alert('CSV downloaded')}>📥 Download CSV</button>
           </div>
           <div className="txn-filters">
-            <select className="txn-filter-select" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
-              {['All Dates', 'Last 7 days', 'Last 30 days', 'This month', 'Last month'].map(o => <option key={o}>{o}</option>)}
-            </select>
             <select className="txn-filter-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-              {['All Types', 'Recharge', 'Deduction', 'Refund', 'Free Meeting', 'Subscription'].map(o => <option key={o}>{o}</option>)}
+              {['All Types', 'Meeting Fee', 'Recharge', 'Refund'].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
-          <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>
-            Transaction history will appear here once the wallet system is fully activated.
-          </div>
+          {transactions.length === 0 ? (
+            <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>
+              No transactions yet. They'll appear here once meetings are booked.
+            </div>
+          ) : (
+            <div className="txn-list">
+              {transactions
+                .filter(t => typeFilter === 'All Types' || t.type === typeFilter)
+                .map(t => (
+                  <div key={t.id} className="txn-row">
+                    <div className="txn-row-icon" style={{ background: t.amount < 0 ? '#FEF2F2' : '#ECFDF5', color: t.amount < 0 ? '#DC2626' : '#059669' }}>
+                      {t.amount < 0 ? '↓' : '↑'}
+                    </div>
+                    <div className="txn-row-info">
+                      <div className="txn-row-desc">{t.desc}</div>
+                      <div className="txn-row-date">{t.date} · {t.type}</div>
+                    </div>
+                    <div className="txn-row-amount" style={{ color: t.amount < 0 ? '#DC2626' : '#059669' }}>
+                      {t.amount < 0 ? '−' : '+'}₹{Math.abs(t.amount).toLocaleString('en-IN')}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
 
         {/* Free vs Pro Comparison */}

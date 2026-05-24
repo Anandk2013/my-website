@@ -1,31 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AdminNav from '@/components/AdminNav';
+import { createClient } from '@/lib/supabase';
 
 type TabType = 'customers' | 'brands' | 'flagged';
 type DrawerType = 'customer' | 'brand' | null;
 
-const CUSTOMERS = [
-  { id: 'c1', initials: 'PS', name: 'Priya Sharma', email: 'priya.s@gmail.com', phone: '+91 98765 43210', city: 'Bengaluru', bookings: 8, reviews: 5, flags: 0, status: 'active' },
-  { id: 'c2', initials: 'RK', name: 'Rahul Krishnan', email: 'rahul.k@outlook.com', phone: '+91 87654 32109', city: 'Bengaluru', bookings: 4, reviews: 2, flags: 0, status: 'active' },
-  { id: 'c3', initials: 'SG', name: 'Sneha Gupta', email: 'sneha.g@yahoo.com', phone: '+91 76543 21098', city: 'Bengaluru', bookings: 3, reviews: 1, flags: 0, status: 'active' },
-  { id: 'c4', initials: 'DM', name: 'Deepak Menon', email: 'deepak.m@gmail.com', phone: '+91 65432 10987', city: 'Bengaluru', bookings: 6, reviews: 3, flags: 1, status: 'active' },
-  { id: 'c5', initials: 'AR', name: 'Ajay Rawat', email: 'ajay.r@gmail.com', phone: '+91 54321 09876', city: 'Delhi NCR', bookings: 5, reviews: 0, flags: 3, status: 'suspended' },
-];
-
-const BRANDS = [
-  { id: 'b1', initials: 'AI', name: 'Artisan Interiors', sub: 'Koramangala · Since Jan 2026', tier: 'Pro', wallet: '₹12,500', meetings: 24, revenue: '₹1,62,000', rating: '4.8', status: 'active' },
-  { id: 'b2', initials: 'DC', name: 'DesignCraft Studio', sub: 'Koramangala · Since Dec 2025', tier: 'Pro', wallet: '₹28,000', meetings: 31, revenue: '₹2,14,000', rating: '4.9', status: 'active' },
-  { id: 'b3', initials: 'SW', name: 'SpaceWell Interiors', sub: 'HSR Layout · Since Feb 2026', tier: 'Pro', wallet: '₹5,200', meetings: 18, revenue: '₹98,000', rating: '4.8', status: 'active' },
-  { id: 'b4', initials: 'ND', name: 'Nirmana Design Lab', sub: 'Jayanagar · Since Mar 2026', tier: 'Free', wallet: '₹8,000', meetings: 9, revenue: '₹41,000', rating: '4.6', status: 'paused' },
-];
-
-const FLAGGED = [
-  { id: 'f1', initials: 'AR', name: 'Ajay Rawat', email: 'ajay.r@gmail.com · Delhi NCR', phone: '+91 54321 09876', bookings: 5, reports: 3, brands: 'DesignCraft, Livora, UrbanNest', firstFlagged: 'Apr 5, 2026' },
-  { id: 'f2', initials: 'KP', name: 'Karan Puri', email: 'karan.p@yahoo.com · Bengaluru', phone: '+91 43210 98765', bookings: 7, reports: 4, brands: 'Artisan, SpaceWell, KitchenKraft, Atelier', firstFlagged: 'Mar 28, 2026' },
-  { id: 'f3', initials: 'SM', name: 'Suresh M.', email: 'suresh.m@hotmail.com · Hyderabad', phone: '+91 32109 87654', bookings: 3, reports: 3, brands: 'Vastu Design, NovusHome, GreenLeaf', firstFlagged: 'Apr 10, 2026' },
-];
+type RealCustomer = {
+  id: string; initials: string; name: string; email: string;
+  phone: string; bookings: number; reviews: number; flags: number; status: string;
+};
+type RealBrand = {
+  id: string; initials: string; name: string; sub: string;
+  tier: string; wallet: string; meetings: number; rating: string; status: string;
+};
 
 export default function AdminBrandsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('customers');
@@ -35,9 +24,61 @@ export default function AdminBrandsPage() {
   const [suspendReason, setSuspendReason] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [toast, setToast] = useState({ show: false, color: 'green', msg: '' });
-  const [customerStatuses, setCustomerStatuses] = useState<Record<string, string>>(
-    Object.fromEntries(CUSTOMERS.map(c => [c.id, c.status]))
-  );
+  const [customers, setCustomers] = useState<RealCustomer[]>([]);
+  const [brands, setBrands] = useState<RealBrand[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [customerStatuses, setCustomerStatuses] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const supabase = createClient();
+    Promise.all([
+      supabase.from('brands').select('id, name, logo_initials, location, plan_type, wallet_balance, rating, review_count, status, is_verified, created_at').order('created_at', { ascending: false }),
+      supabase.from('bookings').select('id, homeowner_name, homeowner_email, homeowner_phone, status, reviewed_at, brand_id').order('created_at', { ascending: false }),
+    ]).then(([{ data: brandsData }, { data: bookingsData }]) => {
+      // Build brands list with meeting counts
+      const bookingsByBrand: Record<string, number> = {};
+      (bookingsData ?? []).forEach(b => {
+        bookingsByBrand[b.brand_id] = (bookingsByBrand[b.brand_id] ?? 0) + 1;
+      });
+      setBrands((brandsData ?? []).map(b => ({
+        id: b.id,
+        initials: b.logo_initials ?? b.name.slice(0, 2).toUpperCase(),
+        name: b.name,
+        sub: `${b.location} · Since ${new Date(b.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`,
+        tier: b.plan_type === 'pro' ? 'Pro' : 'Free',
+        wallet: `₹${(b.wallet_balance ?? 0).toLocaleString('en-IN')}`,
+        meetings: bookingsByBrand[b.id] ?? 0,
+        rating: b.rating?.toString() ?? '—',
+        status: b.status ?? 'active',
+      })));
+
+      // Build customers from unique emails in bookings
+      const emailMap: Record<string, RealCustomer> = {};
+      (bookingsData ?? []).forEach((b, i) => {
+        if (!b.homeowner_email) return;
+        if (!emailMap[b.homeowner_email]) {
+          const name = b.homeowner_name ?? b.homeowner_email.split('@')[0];
+          emailMap[b.homeowner_email] = {
+            id: b.homeowner_email,
+            initials: name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase(),
+            name,
+            email: b.homeowner_email,
+            phone: b.homeowner_phone ?? '—',
+            bookings: 0,
+            reviews: 0,
+            flags: 0,
+            status: 'active',
+          };
+        }
+        emailMap[b.homeowner_email].bookings++;
+        if (b.reviewed_at) emailMap[b.homeowner_email].reviews++;
+      });
+      const custList = Object.values(emailMap).sort((a, b) => b.bookings - a.bookings);
+      setCustomers(custList);
+      setCustomerStatuses(Object.fromEntries(custList.map(c => [c.id, c.status])));
+      setLoadingData(false);
+    });
+  }, []);
 
   function showToast(color: string, msg: string) {
     setToast({ show: true, color, msg });
@@ -100,9 +141,9 @@ export default function AdminBrandsPage() {
         {/* Tabs */}
         <div className="adm-um-tabs">
           {[
-            { id: 'customers', label: 'Customers', count: '2,847', danger: false },
-            { id: 'brands', label: 'Brands', count: '48', danger: false },
-            { id: 'flagged', label: 'Flagged', count: '6', danger: true },
+            { id: 'customers', label: 'Customers', count: loadingData ? '…' : customers.length.toString(), danger: false },
+            { id: 'brands', label: 'Brands', count: loadingData ? '…' : brands.length.toString(), danger: false },
+            { id: 'flagged', label: 'Flagged', count: '0', danger: false },
           ].map(t => (
             <button
               key={t.id}
@@ -121,7 +162,7 @@ export default function AdminBrandsPage() {
             <div className="adm-dc-header">
               <div className="adm-dc-title">
                 👤 Customers
-                <span style={{ fontSize: 12, color: 'var(--ink-4)', fontWeight: 500, marginLeft: 4 }}>2,847 total</span>
+                <span style={{ fontSize: 12, color: 'var(--ink-4)', fontWeight: 500, marginLeft: 4 }}>{customers.length} total</span>
               </div>
               <button className="adm-dc-btn" onClick={() => alert('Export CSV')}>📥 Export</button>
             </div>
@@ -142,7 +183,7 @@ export default function AdminBrandsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {CUSTOMERS.map(c => {
+                  {(search ? customers.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())) : customers).map(c => {
                     const status = customerStatuses[c.id] ?? c.status;
                     const isSuspended = status === 'suspended';
                     return (
@@ -191,7 +232,7 @@ export default function AdminBrandsPage() {
             <div className="adm-dc-header">
               <div className="adm-dc-title">
                 🏢 Brands
-                <span style={{ fontSize: 12, color: 'var(--ink-4)', fontWeight: 500, marginLeft: 4 }}>48 total</span>
+                <span style={{ fontSize: 12, color: 'var(--ink-4)', fontWeight: 500, marginLeft: 4 }}>{brands.length} total</span>
               </div>
               <button className="adm-dc-btn" onClick={() => alert('Export CSV')}>📥 Export</button>
             </div>
@@ -207,12 +248,12 @@ export default function AdminBrandsPage() {
                 <thead>
                   <tr>
                     <th>Brand</th><th>Tier</th><th>Wallet</th>
-                    <th>Meetings</th><th>Revenue</th><th>Rating</th>
+                    <th>Meetings</th><th>Rating</th>
                     <th>Status</th><th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {BRANDS.map(b => (
+                  {(search ? brands.filter(b => b.name.toLowerCase().includes(search.toLowerCase())) : brands).map(b => (
                     <tr key={b.id}>
                       <td>
                         <div className="adm-user-cell">
@@ -226,7 +267,6 @@ export default function AdminBrandsPage() {
                       <td><span className={`adm-pill ${b.tier.toLowerCase()}`}>{b.tier}</span></td>
                       <td><strong>{b.wallet}</strong></td>
                       <td>{b.meetings}</td>
-                      <td style={{ fontWeight: 700, color: 'var(--green)' }}>{b.revenue}</td>
                       <td>⭐ {b.rating}</td>
                       <td><span className={`adm-pill ${b.status}`}>{b.status.charAt(0).toUpperCase() + b.status.slice(1)}</span></td>
                       <td style={{ textAlign: 'right' }}>

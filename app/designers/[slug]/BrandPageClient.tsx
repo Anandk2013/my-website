@@ -64,11 +64,12 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
     const supabase = createClient();
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
+      // Check by both user ID (logged-in booking) and email (guest booking)
       const { data } = await supabase
         .from('bookings')
         .select('id')
         .eq('brand_id', brand.id)
-        .eq('homeowner_id', session.user.id)
+        .or(`homeowner_id.eq.${session.user.id},homeowner_email.eq.${session.user.email}`)
         .neq('status', 'cancelled')
         .limit(1);
       setHasBooking((data?.length ?? 0) > 0);

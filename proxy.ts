@@ -48,8 +48,8 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // /my-consultations — any logged-in user
-  if (pathname === '/my-consultations') {
+  // /my-consultations and /my-bookings — any logged-in user
+  if (pathname === '/my-consultations' || pathname === '/my-bookings') {
     if (!session) {
       const url = new URL('/login', req.url)
       url.searchParams.set('returnTo', pathname)
