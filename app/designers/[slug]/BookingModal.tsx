@@ -92,8 +92,10 @@ export default function BookingModal({
     setLoading(true);
     setServerError('');
     const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
     const { error } = await supabase.from('bookings').insert({
       brand_id: brand.id,
+      homeowner_id: session?.user?.id ?? null,
       homeowner_name: form.name.trim(),
       homeowner_email: form.email.trim(),
       homeowner_phone: form.phone.trim(),

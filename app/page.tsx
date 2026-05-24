@@ -188,7 +188,8 @@ export default function Home() {
                 </select>
               </div>
               <button className="hsp-go-btn" onClick={() => router.push('/designers')}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                Search
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                 </svg>
               </button>
@@ -360,7 +361,7 @@ export default function Home() {
               <div className="section-label">For Interior Design Brands</div>
               <h2>Are you an interior design brand?</h2>
               <p>Join 100+ verified brands on Inzario and connect with serious homeowners ready for their interior journey.</p>
-              <a href="#" className="btn-brand-register">Register Your Brand <ArrowIcon /></a>
+              <a href="/register-brand" className="btn-brand-register">Register Your Brand <ArrowIcon /></a>
             </div>
           </div>
         </div>

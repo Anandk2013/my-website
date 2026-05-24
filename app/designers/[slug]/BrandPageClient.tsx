@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import type { Brand } from "@/lib/types";
 import BookingModal from "./BookingModal";
 import NavAuth from "@/components/NavAuth";
+import { createClient } from "@/lib/supabase";
 
 export default function BrandPageClient({ brand }: { brand: Brand }) {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [hasBooking, setHasBooking] = useState(false);
 
   const projects = [
     { emoji: '🛋️', bg: 'linear-gradient(135deg,#E8D5B7,#C4A77D)', title: '3BHK Modern Apartment', desc: 'Full home interior — Whitefield · ₹18L budget · 1,400 sqft', tag: 'Full Home' },
@@ -57,6 +59,21 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
     ...(brand.team_size ? [{ label: 'Team Size', val: `${brand.team_size}` }] : []),
     ...(brand.response_time ? [{ label: 'Response Time', val: brand.response_time }] : []),
   ];
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('brand_id', brand.id)
+        .eq('homeowner_id', session.user.id)
+        .neq('status', 'cancelled')
+        .limit(1);
+      setHasBooking((data?.length ?? 0) > 0);
+    });
+  }, [brand.id]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -394,22 +411,34 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
                   </svg>
                   Contact Details
                 </h3>
-                {brand.phone && (
-                  <div className="bp-stat-row" style={{ padding: '8px 0' }}>
-                    <span className="bp-stat-label">Phone</span>
-                    <span className="bp-stat-val">{brand.phone}</span>
+                {hasBooking ? (
+                  <>
+                    {brand.phone && (
+                      <div className="bp-stat-row" style={{ padding: '8px 0' }}>
+                        <span className="bp-stat-label">Phone</span>
+                        <span className="bp-stat-val">{brand.phone}</span>
+                      </div>
+                    )}
+                    {brand.email && (
+                      <div className="bp-stat-row" style={{ padding: '8px 0' }}>
+                        <span className="bp-stat-label">Email</span>
+                        <span className="bp-stat-val">{brand.email}</span>
+                      </div>
+                    )}
+                    {brand.address && (
+                      <p style={{ padding: '8px 0', fontSize: '13px', color: 'var(--ink-light)', lineHeight: 1.6, margin: 0 }}>
+                        {brand.address}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="bp-contact-locked">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                    <p>Book a free consultation to unlock contact details</p>
+                    <button className="bp-contact-locked-btn" onClick={() => setBookingOpen(true)}>Book Free Consultation</button>
                   </div>
-                )}
-                {brand.email && (
-                  <div className="bp-stat-row" style={{ padding: '8px 0' }}>
-                    <span className="bp-stat-label">Email</span>
-                    <span className="bp-stat-val">{brand.email}</span>
-                  </div>
-                )}
-                {brand.address && (
-                  <p style={{ padding: '8px 0', fontSize: '13px', color: 'var(--ink-light)', lineHeight: 1.6, margin: 0 }}>
-                    {brand.address}
-                  </p>
                 )}
               </div>
             )}
@@ -441,18 +470,29 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
           {(brand.phone || brand.email) && (
             <div className="bp-sidebar-info">
               <h4>Contact</h4>
-              {brand.phone && (
-                <div className="bp-stat-row">
-                  <span className="bp-stat-label">Phone</span>
-                  <span className="bp-stat-val">{brand.phone}</span>
-                </div>
-              )}
-              {brand.email && (
-                <div className="bp-stat-row">
-                  <span className="bp-stat-label">Email</span>
-                  <span className="bp-stat-val" style={{ wordBreak: 'break-all', fontSize: '12px' }}>
-                    {brand.email}
-                  </span>
+              {hasBooking ? (
+                <>
+                  {brand.phone && (
+                    <div className="bp-stat-row">
+                      <span className="bp-stat-label">Phone</span>
+                      <span className="bp-stat-val">{brand.phone}</span>
+                    </div>
+                  )}
+                  {brand.email && (
+                    <div className="bp-stat-row">
+                      <span className="bp-stat-label">Email</span>
+                      <span className="bp-stat-val" style={{ wordBreak: 'break-all', fontSize: '12px' }}>
+                        {brand.email}
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="bp-contact-locked-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                  </svg>
+                  <span>Book a meeting to unlock</span>
                 </div>
               )}
             </div>

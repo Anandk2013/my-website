@@ -6,6 +6,7 @@ import NavAuth from "@/components/NavAuth";
 export default function Designers() {
   const [localityOpen, setLocalityOpen] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const searchHeader = document.getElementById('searchHeader');
@@ -202,7 +203,12 @@ export default function Designers() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" placeholder="Search by brand, style, or locality..." />
+            <input
+              type="text"
+              placeholder="Search by brand, style, or locality..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
           </div>
           <div className="sh-sort">
             <label>Sort:</label>
@@ -255,7 +261,14 @@ export default function Designers() {
           </div>
 
           <div className="brand-list">
-            {brands.map(brand => (
+            {brands.filter(brand => {
+              if (!searchQuery.trim()) return true;
+              const q = searchQuery.toLowerCase();
+              return brand.name.toLowerCase().includes(q) ||
+                brand.location.toLowerCase().includes(q) ||
+                brand.tags.some(t => t.toLowerCase().includes(q)) ||
+                brand.snippet.toLowerCase().includes(q);
+            }).map(brand => (
               <div className={`bc-card${brand.pro ? ' pro' : ''}`} key={brand.name}>
                 <div className="bc-photo">
                   <div className="bc-photo-placeholder" style={{background: brand.bg}}>{brand.emoji}</div>
