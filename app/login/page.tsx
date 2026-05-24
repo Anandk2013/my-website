@@ -128,19 +128,19 @@ function LoginForm() {
             </div>
             <div className="login-title">Check your inbox</div>
             <p className="login-subtitle">
-              We sent a 6-digit code to{' '}
+              We sent an 8-digit code to{' '}
               <span className="login-email-hl">{email}</span>.
               Enter it below to sign in.
             </p>
             {error && <div className="login-error">{error}</div>}
             <div className="login-field">
-              <label className="login-label">6-digit code</label>
+              <label className="login-label">8-digit code</label>
               <input
                 className={`login-input${error ? ' has-error' : ''}`}
                 type="text"
                 inputMode="numeric"
-                maxLength={6}
-                placeholder="123456"
+                maxLength={8}
+                placeholder="12345678"
                 value={code}
                 onChange={e => { setCode(e.target.value.replace(/\D/g, '')); setError(''); }}
                 onKeyDown={e => e.key === 'Enter' && verifyCode()}
