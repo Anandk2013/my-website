@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from "react";
+import NavAuth from "@/components/NavAuth";
 
 const ITEMS = [
   { id: 'kitchen', emoji: '🍳', name: 'Modular Kitchen', base: 3.5, mq: 1 },
@@ -153,6 +154,7 @@ export default function BudgetEstimator() {
             <li><a href="/designers">Find Brands</a></li>
             <li><a href="/budget-estimator" style={{color:'var(--accent)'}}>Budget Estimator</a></li>
             <li><a href="#" className="nav-cta">For Brands</a></li>
+            <li><NavAuth /></li>
           </ul>
         </div>
       </nav>

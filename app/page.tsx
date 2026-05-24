@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import NavAuth from "@/components/NavAuth";
 
 export default function Home() {
   const router = useRouter();
@@ -114,6 +115,7 @@ export default function Home() {
             <li><a href="#why-inzario">Why Inzario</a></li>
             <li><a href="#budget-estimator">Budget Estimator</a></li>
             <li><a href="#for-brands" className="nav-cta">For Brands</a></li>
+            <li><NavAuth /></li>
           </ul>
           <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round">
@@ -137,6 +139,7 @@ export default function Home() {
             <li><a href="#why-inzario" onClick={() => setMobileMenuOpen(false)}>Why Inzario</a></li>
             <li><a href="#budget-estimator" onClick={() => setMobileMenuOpen(false)}>Budget Estimator</a></li>
             <li><a href="#for-brands" className="mm-cta" onClick={() => setMobileMenuOpen(false)}>For Brands</a></li>
+            <li><a href="/login" onClick={() => setMobileMenuOpen(false)} style={{display:'block',padding:'14px 16px',textDecoration:'none',fontSize:'15px',fontWeight:600,color:'var(--primary)'}}>Login / Sign Up</a></li>
           </ul>
         </div>
       </div>

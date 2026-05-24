@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import NavAuth from "@/components/NavAuth";
 
 export default function Designers() {
   const [localityOpen, setLocalityOpen] = useState(false);
@@ -178,6 +179,7 @@ export default function Designers() {
             <li><a href="#">How It Works</a></li>
             <li><a href="#">Budget Estimator</a></li>
             <li><a href="#" className="nav-brand-btn">For Brands</a></li>
+            <li><NavAuth /></li>
           </ul>
         </div>
       </nav>
