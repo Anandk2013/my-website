@@ -76,7 +76,10 @@ export default function RegisterBrandPage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
-        options: { data: { role: 'brand' } },
+        options: {
+          data: { role: 'brand' },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (authError) throw new Error(authError.message);
 
