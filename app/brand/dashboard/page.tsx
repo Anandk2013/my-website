@@ -14,6 +14,7 @@ type BrandData = {
   wallet_balance: number;
   rating: number;
   review_count: number;
+  status: string;
 };
 
 type Booking = {
@@ -92,7 +93,7 @@ export default function BrandDashboardPage() {
 
       const { data: b } = await supabase
         .from('brands')
-        .select('id, name, logo_initials, plan_type, is_verified, wallet_balance, rating, review_count')
+        .select('id, name, logo_initials, plan_type, is_verified, wallet_balance, rating, review_count, status')
         .eq('auth_user_id', session.user.id)
         .single();
 
@@ -189,6 +190,17 @@ export default function BrandDashboardPage() {
       <BrandNav />
 
       <div className="dash-container">
+
+        {/* Pending approval banner */}
+        {brand.status === 'pending_review' && (
+          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 20 }}>⏳</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#92400E' }}>Your profile is under review</div>
+              <div style={{ fontSize: 13, color: '#B45309', marginTop: 2 }}>Our team will verify your brand within 24–48 hours. You&apos;ll appear in search once approved.</div>
+            </div>
+          </div>
+        )}
 
         {/* Brand Header */}
         <div className="dash-brand-header">

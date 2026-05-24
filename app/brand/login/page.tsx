@@ -99,6 +99,13 @@ function BrandLoginForm() {
         </button>
 
         <p className="login-hint" style={{ marginTop: 16 }}>
+          Forgot your password?{' '}
+          <Link href="/login" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
+            Sign in with a one-time email code →
+          </Link>
+        </p>
+
+        <p className="login-hint">
           New to Inzario?{' '}
           <Link href="/register-brand" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
             Register your brand →
