@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import NavAuth from "@/components/NavAuth";
 
 export default function Home() {
@@ -258,7 +259,7 @@ export default function Home() {
               <div className="section-label">Curated For You</div>
               <div className="section-title">Top-Rated Interior Brands in Bangalore</div>
             </div>
-            <a href="/designers" className="view-all">View All Brands <ArrowIcon /></a>
+            <Link href="/designers" className="view-all">View All Brands <ArrowIcon /></Link>
           </div>
           <div className="brands-scroll">
             {brands.map(brand => (
@@ -275,7 +276,7 @@ export default function Home() {
                   </div>
                   <div className="brand-location"><PinIcon /> {brand.location}</div>
                   <div className="brand-tags">{brand.tags.map(tag => <span className="brand-tag" key={tag}>{tag}</span>)}</div>
-                  <a href="/designers" className="brand-book-link">Book Free Consultation <ArrowIcon /></a>
+                  <Link href="/designers" className="brand-book-link">Book Free Consultation <ArrowIcon /></Link>
                 </div>
               </div>
             ))}
@@ -322,7 +323,7 @@ export default function Home() {
               <p>Use our free Budget Estimator to get a detailed room-by-room cost breakdown for your home — no signup needed.</p>
             </div>
             <div className="budget-cta">
-              <a href="/budget-estimator">Estimate Your Budget <ArrowIcon /></a>
+              <Link href="/budget-estimator">Estimate Your Budget <ArrowIcon /></Link>
             </div>
           </div>
         </div>
@@ -361,7 +362,7 @@ export default function Home() {
               <div className="section-label">For Interior Design Brands</div>
               <h2>Are you an interior design brand?</h2>
               <p>Join 100+ verified brands on Inzario and connect with serious homeowners ready for their interior journey.</p>
-              <a href="/register-brand" className="btn-brand-register">Register Your Brand <ArrowIcon /></a>
+              <Link href="/register-brand" className="btn-brand-register">Register Your Brand <ArrowIcon /></Link>
             </div>
           </div>
         </div>
@@ -392,7 +393,7 @@ export default function Home() {
               <ul>
                 <li><a href="#">How It Works</a></li>
                 <li><a href="#">Budget Estimator</a></li>
-                <li><a href="/designers">Top Brands</a></li>
+                <li><Link href="/designers">Top Brands</Link></li>
                 <li><a href="#">For Brands</a></li>
               </ul>
             </div>
