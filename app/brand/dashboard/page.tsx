@@ -9,11 +9,9 @@ type BrandData = {
   id: string;
   name: string;
   logo_initials: string | null;
-  cover_gradient: string | null;
   plan_type: string;
   is_verified: boolean;
   wallet_balance: number;
-  is_paused: boolean;
   rating: number;
   review_count: number;
 };
@@ -94,13 +92,13 @@ export default function BrandDashboardPage() {
 
       const { data: b } = await supabase
         .from('brands')
-        .select('id, name, logo_initials, cover_gradient, plan_type, is_verified, wallet_balance, is_paused, rating, review_count')
+        .select('id, name, logo_initials, plan_type, is_verified, wallet_balance, rating, review_count')
         .eq('auth_user_id', session.user.id)
         .single();
 
       if (!b) { setLoading(false); return; }
-      setBrand(b);
-      setPaused(b.is_paused ?? false);
+      setBrand(b as unknown as BrandData);
+      setPaused(false);
 
       const today = new Date().toISOString().split('T')[0];
 
@@ -142,7 +140,7 @@ export default function BrandDashboardPage() {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    await supabase.from('brands').update({ is_paused: true }).eq('auth_user_id', session.user.id);
+    await supabase.from('brands').update({ status: 'paused' }).eq('auth_user_id', session.user.id);
     setPaused(true);
     const d = new Date(pauseDate);
     setPauseUntil('Paused until ' + d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }));
@@ -153,7 +151,7 @@ export default function BrandDashboardPage() {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    await supabase.from('brands').update({ is_paused: false }).eq('auth_user_id', session.user.id);
+    await supabase.from('brands').update({ status: 'active' }).eq('auth_user_id', session.user.id);
     setPaused(false);
     setPauseUntil('');
   }
@@ -195,7 +193,7 @@ export default function BrandDashboardPage() {
         {/* Brand Header */}
         <div className="dash-brand-header">
           <div className="dash-bh-left">
-            <div className="dash-bh-logo" style={{ background: brand.cover_gradient ?? 'linear-gradient(135deg,#E8D5B7,#C4A77D)' }}>
+            <div className="dash-bh-logo" style={{ background: 'linear-gradient(135deg,#E8D5B7,#C4A77D)' }}>
               {brand.logo_initials ?? '??'}
             </div>
             <div>

@@ -9,15 +9,15 @@ type BrandProfile = {
   name: string;
   gst_number: string | null;
   description: string | null;
-  years_in_business: string | null;
-  team_size: string | null;
+  years_in_business: number | null;
+  team_size: number | null;
   website: string | null;
   instagram: string | null;
-  services: string[] | null;
-  localities: string[] | null;
+  service_types: string[] | null;
+  areas_served: string[] | null;
   budget_min: number | null;
   budget_max: number | null;
-  styles: string[] | null;
+  design_styles: string[] | null;
   plan_type: string;
   slug: string | null;
 };
@@ -74,7 +74,7 @@ export default function BrandProfilePage() {
 
       const { data: b } = await supabase
         .from('brands')
-        .select('id, name, gst_number, description, years_in_business, team_size, website, instagram, services, localities, budget_min, budget_max, styles, plan_type, slug')
+        .select('id, name, gst_number, description, years_in_business, team_size, website, instagram, service_types, areas_served, budget_min, budget_max, design_styles, plan_type, slug')
         .eq('auth_user_id', session.user.id)
         .single();
 
@@ -85,6 +85,24 @@ export default function BrandProfilePage() {
     });
   }, []);
 
+  function numToYears(n: number | null): string {
+    if (n === null) return '';
+    if (n < 1) return 'Less than 1 year';
+    if (n <= 2) return '1–2 years';
+    if (n <= 5) return '3–5 years';
+    if (n <= 10) return '5–10 years';
+    return '10+ years';
+  }
+
+  function numToTeam(n: number | null): string {
+    if (n === null) return '';
+    if (n <= 3) return '1–3 people';
+    if (n <= 8) return '4–8 people';
+    if (n <= 15) return '9–15 people';
+    if (n <= 30) return '16–30 people';
+    return '30+ people';
+  }
+
   function applyBrand(b: BrandProfile) {
     setBrandId(b.id);
     setBrandName(b.name ?? '');
@@ -92,13 +110,13 @@ export default function BrandProfilePage() {
     setPlanType(b.plan_type ?? 'free');
     setSlug(b.slug ?? null);
     setDescription(b.description ?? '');
-    setYears(b.years_in_business ?? '');
-    setTeam(b.team_size ?? '');
+    setYears(numToYears(b.years_in_business));
+    setTeam(numToTeam(b.team_size));
     setWebsite(b.website ?? '');
     setInstagram(b.instagram ?? '');
-    setSelectedServices(new Set(b.services ?? []));
-    setLocalities(b.localities ?? []);
-    setSelectedStyles(new Set(b.styles ?? []));
+    setSelectedServices(new Set(b.service_types ?? []));
+    setLocalities(b.areas_served ?? []);
+    setSelectedStyles(new Set(b.design_styles ?? []));
     setBudgetMin(b.budget_min ?? DEFAULT_BUDGET_MIN);
     setBudgetMax(b.budget_max ?? DEFAULT_BUDGET_MAX);
     setSnapshot(b);
@@ -143,17 +161,19 @@ export default function BrandProfilePage() {
     if (!brandId) return;
     setSaving(true);
     const supabase = createClient();
+    const yearsMap: Record<string, number> = { 'Less than 1 year': 0, '1–2 years': 1, '3–5 years': 3, '5–10 years': 5, '10+ years': 10 };
+    const teamMap: Record<string, number> = { '1–3 people': 1, '4–8 people': 4, '9–15 people': 9, '16–30 people': 16, '30+ people': 30 };
     await supabase.from('brands').update({
       description,
-      years_in_business: years,
-      team_size: team,
+      years_in_business: yearsMap[years] ?? null,
+      team_size: teamMap[team] ?? null,
       website,
       instagram,
-      services: Array.from(selectedServices),
-      localities,
+      service_types: Array.from(selectedServices),
+      areas_served: localities,
       budget_min: budgetMin,
       budget_max: budgetMax,
-      styles: Array.from(selectedStyles),
+      design_styles: Array.from(selectedStyles),
     }).eq('id', brandId);
     setSaving(false);
     setIsDirty(false);
