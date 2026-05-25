@@ -28,7 +28,7 @@ export type Brand = {
   design_styles: string[]
   plan_type: 'free' | 'pro'
   wallet_balance: number
-  status: 'active' | 'paused' | 'pending' | 'rejected'
+  status: 'active' | 'paused' | 'pending_review' | 'rejected'
   auth_user_id: string | null
   created_at: string
 }
