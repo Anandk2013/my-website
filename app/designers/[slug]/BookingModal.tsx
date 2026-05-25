@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Brand } from '@/lib/types';
 
-type Step = 'meeting' | 'details' | 'confirm';
+type Step = 'meeting' | 'details' | 'verify' | 'confirm';
 type MeetingType = 'video_call' | 'site_visit' | 'experience_center';
 
 type FormData = {
@@ -73,6 +73,11 @@ export default function BookingModal({
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const set = (field: keyof FormData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -112,8 +117,66 @@ export default function BookingModal({
     return Object.keys(e).length === 0;
   }
 
-  async function handleSubmit() {
+  function moveToVerify() {
     if (!validate()) return;
+    setOtp('');
+    setOtpSent(false);
+    setOtpError('');
+    setStep('verify');
+    sendOtp();
+  }
+
+  async function sendOtp() {
+    setOtpLoading(true);
+    setOtpError('');
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: form.phone }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setOtpSent(true);
+        setResendCooldown(30);
+        const timer = setInterval(() => {
+          setResendCooldown(n => { if (n <= 1) { clearInterval(timer); return 0; } return n - 1; });
+        }, 1000);
+      } else {
+        setOtpError(data.message ?? 'Failed to send OTP. Please try again.');
+      }
+    } catch {
+      setOtpError('Failed to send OTP. Check your connection.');
+    }
+    setOtpLoading(false);
+  }
+
+  async function verifyOtpAndSubmit() {
+    if (otp.length !== 4) { setOtpError('Enter the 4-digit code'); return; }
+    setOtpLoading(true);
+    setOtpError('');
+    try {
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: form.phone, otp }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setOtpError('Incorrect OTP. Please try again.');
+        setOtpLoading(false);
+        return;
+      }
+    } catch {
+      setOtpError('Verification failed. Please try again.');
+      setOtpLoading(false);
+      return;
+    }
+    setOtpLoading(false);
+    await handleSubmit();
+  }
+
+  async function handleSubmit() {
     setLoading(true);
     setServerError('');
     const supabase = createClient();
@@ -173,12 +236,12 @@ export default function BookingModal({
           </div>
         )}
 
-        {/* ── STEPS 1 & 2 ── */}
+        {/* ── STEPS 1, 2 & 3 ── */}
         {step !== 'confirm' && (
           <>
             <div className="booking-modal-header">
               <div className="booking-modal-title">
-                {step === 'meeting' ? 'Book Free Consultation' : 'Your Details'}
+                {step === 'meeting' ? 'Book Free Consultation' : step === 'details' ? 'Your Details' : 'Verify Phone'}
               </div>
               <button className="booking-modal-close" onClick={onClose} aria-label="Close">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -190,7 +253,8 @@ export default function BookingModal({
             {/* Step dots */}
             <div className="booking-modal-steps">
               <div className={`booking-step-dot ${step === 'meeting' ? 'active' : 'done'}`}></div>
-              <div className={`booking-step-dot ${step === 'details' ? 'active' : 'inactive'}`}></div>
+              <div className={`booking-step-dot ${step === 'details' ? 'active' : step === 'meeting' ? 'inactive' : 'done'}`}></div>
+              <div className={`booking-step-dot ${step === 'verify' ? 'active' : 'inactive'}`}></div>
             </div>
 
             <div className="booking-modal-body">
@@ -343,11 +407,53 @@ export default function BookingModal({
                   </div>
                 </>
               )}
+
+              {/* ── STEP 3: Verify phone ── */}
+              {step === 'verify' && (
+                <div className="booking-verify">
+                  <p className="booking-modal-subtitle">
+                    We&apos;ll send a 4-digit code to{' '}
+                    <strong>{form.phone}</strong> to confirm your booking.
+                  </p>
+                  {!otpSent ? (
+                    <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                      {otpLoading
+                        ? <p className="booking-otp-status">Sending OTP…</p>
+                        : <p className="booking-otp-status">Tap Send OTP to receive your code.</p>
+                      }
+                      {otpError && <div className="booking-field-error" style={{ marginTop: 8 }}>{otpError}</div>}
+                    </div>
+                  ) : (
+                    <div className="booking-otp-block">
+                      <label className="booking-label">Enter 4-digit OTP</label>
+                      <input
+                        className="booking-otp-input"
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="- - - -"
+                        value={otp}
+                        onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setOtpError(''); }}
+                        autoFocus
+                      />
+                      {otpError && <div className="booking-field-error">{otpError}</div>}
+                      <button
+                        className="booking-resend-btn"
+                        disabled={resendCooldown > 0 || otpLoading}
+                        onClick={sendOtp}
+                      >
+                        {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
+                      </button>
+                    </div>
+                  )}
+                  {serverError && <div className="booking-server-error" style={{ marginTop: 12 }}>{serverError}</div>}
+                </div>
+              )}
             </div>
 
             {/* Footer buttons */}
             <div className="booking-modal-footer">
-              {step === 'meeting' ? (
+              {step === 'meeting' && (
                 <>
                   <button className="booking-btn-secondary" onClick={onClose}>Cancel</button>
                   <button
@@ -361,25 +467,45 @@ export default function BookingModal({
                     </svg>
                   </button>
                 </>
-              ) : (
+              )}
+              {step === 'details' && (
                 <>
-                  <button className="booking-btn-secondary" onClick={() => { setErrors({}); setServerError(''); setStep('meeting'); }}>
+                  <button className="booking-btn-secondary" onClick={() => { setErrors({}); setStep('meeting'); }}>
                     Back
                   </button>
-                  <button
-                    className="booking-btn-primary"
-                    disabled={loading}
-                    onClick={handleSubmit}
-                  >
-                    {loading ? 'Sending...' : (
-                      <>
-                        Confirm Booking
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      </>
-                    )}
+                  <button className="booking-btn-primary" onClick={moveToVerify}>
+                    Next
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
                   </button>
+                </>
+              )}
+              {step === 'verify' && (
+                <>
+                  <button className="booking-btn-secondary" onClick={() => { setStep('details'); setOtpSent(false); setOtp(''); setOtpError(''); }}>
+                    Back
+                  </button>
+                  {!otpSent ? (
+                    <button className="booking-btn-primary" disabled={otpLoading} onClick={sendOtp}>
+                      {otpLoading ? 'Sending…' : 'Send OTP'}
+                    </button>
+                  ) : (
+                    <button
+                      className="booking-btn-primary"
+                      disabled={otp.length !== 4 || otpLoading || loading}
+                      onClick={verifyOtpAndSubmit}
+                    >
+                      {otpLoading || loading ? 'Verifying…' : (
+                        <>
+                          Verify &amp; Book
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </>
               )}
             </div>
