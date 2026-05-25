@@ -2,17 +2,27 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin' },
-  { label: 'Verification', href: '/admin/verification', badge: 7 },
+  { label: 'Verification', href: '/admin/verification' },
   { label: 'Users', href: '/admin/brands' },
   { label: 'Analytics', href: '/admin/analytics' },
-  { label: 'Settings', href: '/admin/settings' },
 ];
 
 export default function AdminNav() {
   const pathname = usePathname();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('brands')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_verified', false)
+      .then(({ count }) => setPendingCount(count ?? 0));
+  }, []);
 
   return (
     <nav style={{
@@ -51,12 +61,12 @@ export default function AdminNav() {
                     }}
                   >
                     {item.label}
-                    {item.badge && (
+                    {item.href === '/admin/verification' && pendingCount > 0 && (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         minWidth: 18, height: 18, background: 'var(--red)', color: 'white',
                         fontSize: 10, fontWeight: 700, borderRadius: 100, padding: '0 5px',
-                      }}>{item.badge}</span>
+                      }}>{pendingCount}</span>
                     )}
                   </Link>
                 </li>
