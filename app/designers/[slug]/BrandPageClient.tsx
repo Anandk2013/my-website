@@ -196,12 +196,12 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
                       <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
                       <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    Book a Free Consultation
+                    Book Free Consultation
                   </button>
                   <div className="bh-meeting-types">
                     <span className="bh-mt">📹 Video Call</span>
                     <span className="bh-mt">🏠 Site Visit</span>
-                    {brand.address && <span className="bh-mt">🏢 Experience Center</span>}
+                    <span className="bh-mt">🏢 Experience Center</span>
                   </div>
                 </div>
               </div>
@@ -452,11 +452,11 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
           <div className="bp-sidebar-cta">
             <h4>Interested in {brand.name}?</h4>
             <p>Book a free consultation to discuss your project, budget, and timeline.</p>
-            <button className="bp-sidebar-cta-btn" onClick={() => setBookingOpen(true)}>Book a Free Consultation</button>
+            <button className="bp-sidebar-cta-btn" onClick={() => setBookingOpen(true)}>Book Free Consultation</button>
             <div className="bp-sidebar-mt-list">
               <span className="bp-sidebar-mt">📹 Video</span>
               <span className="bp-sidebar-mt">🏠 Site Visit</span>
-              {brand.address && <span className="bp-sidebar-mt">🏢 Studio</span>}
+              <span className="bp-sidebar-mt">🏢 Experience Center</span>
             </div>
           </div>
           <div className="bp-sidebar-info">
@@ -503,7 +503,7 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
 
       {/* MOBILE CTA */}
       <div className="bp-mobile-cta">
-        <button onClick={() => setBookingOpen(true)}>Book a Free Consultation</button>
+        <button onClick={() => setBookingOpen(true)}>Book Free Consultation</button>
       </div>
 
       {/* BOOKING MODAL */}

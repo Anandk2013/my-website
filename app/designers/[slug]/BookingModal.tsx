@@ -25,6 +25,29 @@ const MEETING_LABELS: Record<MeetingType, string> = {
   experience_center: 'Experience Center visit',
 };
 
+const PREFS_KEY = 'inzario_customer_prefs';
+
+function loadPrefs(): Partial<FormData> {
+  try {
+    return JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+function savePrefs(form: FormData) {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify({
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
+      projectType: form.projectType,
+      budgetRange: form.budgetRange,
+      notes: form.notes.trim(),
+    }));
+  } catch {}
+}
+
 export default function BookingModal({
   brand,
   onClose,
@@ -33,16 +56,19 @@ export default function BookingModal({
   onClose: () => void;
 }) {
   const [step, setStep] = useState<Step>('meeting');
-  const [form, setForm] = useState<FormData>({
-    meetingType: '',
-    name: '',
-    phone: '',
-    email: '',
-    projectType: '',
-    budgetRange: '',
-    preferredDate: '',
-    preferredTime: '',
-    notes: '',
+  const [form, setForm] = useState<FormData>(() => {
+    const p = loadPrefs();
+    return {
+      meetingType: '',
+      name: p.name ?? '',
+      phone: p.phone ?? '',
+      email: p.email ?? '',
+      projectType: p.projectType ?? '',
+      budgetRange: p.budgetRange ?? '',
+      preferredDate: '',
+      preferredTime: '',
+      notes: p.notes ?? '',
+    };
   });
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [loading, setLoading] = useState(false);
@@ -67,14 +93,12 @@ export default function BookingModal({
       label: 'Site Visit',
       desc: 'Designer visits your home for measurements & consultation',
     },
-    ...(brand.address
-      ? [{
-          value: 'experience_center' as MeetingType,
-          emoji: '🏢',
-          label: 'Experience Center',
-          desc: 'Visit the studio to see materials and finishes in person',
-        }]
-      : []),
+    {
+      value: 'experience_center' as MeetingType,
+      emoji: '🏢',
+      label: 'Experience Center',
+      desc: "Visit the brand's studio to see materials and finishes in person",
+    },
   ];
 
   function validate() {
@@ -110,6 +134,7 @@ export default function BookingModal({
     if (error) {
       setServerError('Something went wrong. Please try again.');
     } else {
+      savePrefs(form);
       setStep('confirm');
     }
   }
@@ -153,7 +178,7 @@ export default function BookingModal({
           <>
             <div className="booking-modal-header">
               <div className="booking-modal-title">
-                {step === 'meeting' ? 'Book a Free Consultation' : 'Your Details'}
+                {step === 'meeting' ? 'Book Free Consultation' : 'Your Details'}
               </div>
               <button className="booking-modal-close" onClick={onClose} aria-label="Close">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
