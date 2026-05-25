@@ -133,7 +133,7 @@ export default function BookingModal({
     });
     setLoading(false);
     if (error) {
-      setServerError('Something went wrong. Please try again.');
+      setServerError(`Error: ${error.code} – ${error.message}`);
     } else {
       savePrefs(form);
       setStep('confirm');
