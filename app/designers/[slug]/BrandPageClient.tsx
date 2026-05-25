@@ -199,9 +199,9 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
                     Book Free Consultation
                   </button>
                   <div className="bh-meeting-types">
-                    <span className="bh-mt">📹 Video Call</span>
-                    <span className="bh-mt">🏠 Site Visit</span>
-                    <span className="bh-mt">🏢 Experience Center</span>
+                    {(brand.meeting_types ?? ['video_call','site_visit','experience_center']).includes('video_call') && <span className="bh-mt">📹 Video Call</span>}
+                    {(brand.meeting_types ?? ['video_call','site_visit','experience_center']).includes('site_visit') && <span className="bh-mt">🏠 Site Visit</span>}
+                    {(brand.meeting_types ?? ['video_call','site_visit','experience_center']).includes('experience_center') && <span className="bh-mt">🏢 Experience Center</span>}
                   </div>
                 </div>
               </div>
@@ -454,9 +454,9 @@ export default function BrandPageClient({ brand }: { brand: Brand }) {
             <p>Book a free consultation to discuss your project, budget, and timeline.</p>
             <button className="bp-sidebar-cta-btn" onClick={() => setBookingOpen(true)}>Book Free Consultation</button>
             <div className="bp-sidebar-mt-list">
-              <span className="bp-sidebar-mt">📹 Video</span>
-              <span className="bp-sidebar-mt">🏠 Site Visit</span>
-              <span className="bp-sidebar-mt">🏢 Experience Center</span>
+              {(brand.meeting_types ?? ['video_call','site_visit','experience_center']).includes('video_call') && <span className="bp-sidebar-mt">📹 Video</span>}
+              {(brand.meeting_types ?? ['video_call','site_visit','experience_center']).includes('site_visit') && <span className="bp-sidebar-mt">🏠 Site Visit</span>}
+              {(brand.meeting_types ?? ['video_call','site_visit','experience_center']).includes('experience_center') && <span className="bp-sidebar-mt">🏢 Experience Center</span>}
             </div>
           </div>
           <div className="bp-sidebar-info">

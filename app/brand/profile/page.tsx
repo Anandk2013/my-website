@@ -18,9 +18,16 @@ type BrandProfile = {
   budget_min: number | null;
   budget_max: number | null;
   design_styles: string[] | null;
+  meeting_types: string[] | null;
   plan_type: string;
   slug: string | null;
 };
+
+const MEETING_TYPE_OPTIONS = [
+  { value: 'video_call', emoji: '📹', label: 'Video Call', desc: 'Customer meets you online — no travel required' },
+  { value: 'site_visit', emoji: '🏠', label: 'Site Visit', desc: 'You visit the customer at their home or project site' },
+  { value: 'experience_center', emoji: '🏢', label: 'Experience Center', desc: 'Customer visits your office or studio' },
+];
 
 const SERVICES = [
   { id: 'full_home', emoji: '🏠', label: 'Full Home' },
@@ -63,6 +70,9 @@ export default function BrandProfilePage() {
   const [selectedStyles, setSelectedStyles] = useState<Set<string>>(new Set());
   const [budgetMin, setBudgetMin] = useState(DEFAULT_BUDGET_MIN);
   const [budgetMax, setBudgetMax] = useState(DEFAULT_BUDGET_MAX);
+  const [selectedMeetingTypes, setSelectedMeetingTypes] = useState<Set<string>>(
+    new Set(['video_call', 'site_visit', 'experience_center'])
+  );
 
   // Snapshot for discard
   const [snapshot, setSnapshot] = useState<Partial<BrandProfile>>({});
@@ -74,7 +84,7 @@ export default function BrandProfilePage() {
 
       const { data: b } = await supabase
         .from('brands')
-        .select('id, name, gst_number, description, years_in_business, team_size, website, instagram, service_types, areas_served, budget_min, budget_max, design_styles, plan_type, slug')
+        .select('id, name, gst_number, description, years_in_business, team_size, website, instagram, service_types, areas_served, budget_min, budget_max, design_styles, meeting_types, plan_type, slug')
         .eq('auth_user_id', session.user.id)
         .single();
 
@@ -119,6 +129,7 @@ export default function BrandProfilePage() {
     setSelectedStyles(new Set(b.design_styles ?? []));
     setBudgetMin(b.budget_min ?? DEFAULT_BUDGET_MIN);
     setBudgetMax(b.budget_max ?? DEFAULT_BUDGET_MAX);
+    setSelectedMeetingTypes(new Set(b.meeting_types ?? ['video_call', 'site_visit', 'experience_center']));
     setSnapshot(b);
     setIsDirty(false);
   }
@@ -129,6 +140,16 @@ export default function BrandProfilePage() {
     setSelectedServices(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+    markDirty();
+  }
+
+  function toggleMeetingType(value: string) {
+    setSelectedMeetingTypes(prev => {
+      if (prev.has(value) && prev.size === 1) return prev;
+      const next = new Set(prev);
+      next.has(value) ? next.delete(value) : next.add(value);
       return next;
     });
     markDirty();
@@ -174,6 +195,7 @@ export default function BrandProfilePage() {
       budget_min: budgetMin,
       budget_max: budgetMax,
       design_styles: Array.from(selectedStyles),
+      meeting_types: Array.from(selectedMeetingTypes),
     }).eq('id', brandId);
     setSaving(false);
     setIsDirty(false);
@@ -375,7 +397,64 @@ export default function BrandProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 3: Portfolio ── */}
+        {/* ── Section 3: Meeting Options ── */}
+        <div className="edit-section">
+          <div className="es-header">
+            <div className="es-title"><span>📅</span> Meeting Options</div>
+            <span className="status-badge live">Live</span>
+          </div>
+          <div className="es-body">
+            <p style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16, lineHeight: 1.6 }}>
+              Choose which consultation types customers can book with you. Disable any type you don&apos;t offer or charge separately for.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {MEETING_TYPE_OPTIONS.map(m => {
+                const enabled = selectedMeetingTypes.has(m.value);
+                const isLast = selectedMeetingTypes.size === 1 && enabled;
+                return (
+                  <div key={m.value} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '14px 16px', borderRadius: 10,
+                    background: enabled ? 'var(--accent-soft)' : 'var(--surface-2)',
+                    border: `1px solid ${enabled ? 'var(--accent)' : 'var(--border)'}`,
+                    transition: 'all 0.15s',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 22 }}>{m.emoji}</span>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: enabled ? 'var(--accent)' : 'var(--ink)' }}>{m.label}</div>
+                        <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>{m.desc}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => toggleMeetingType(m.value)}
+                      title={isLast ? 'At least one meeting type must be enabled' : ''}
+                      style={{
+                        width: 44, height: 24, borderRadius: 12, border: 'none',
+                        cursor: isLast ? 'not-allowed' : 'pointer',
+                        background: enabled ? 'var(--accent)' : '#D1D5DB',
+                        position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+                        opacity: isLast ? 0.5 : 1,
+                      }}
+                    >
+                      <span style={{
+                        position: 'absolute', top: 2,
+                        left: enabled ? 22 : 2,
+                        width: 20, height: 20, background: 'white',
+                        borderRadius: 10, transition: 'left 0.2s', display: 'block',
+                      }} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 10 }}>
+              At least one meeting type must remain enabled. Changes take effect immediately after saving.
+            </div>
+          </div>
+        </div>
+
+        {/* ── Section 4: Portfolio ── */}
         <div className="edit-section">
           <div className="es-header">
             <div className="es-title"><span>📸</span> Portfolio</div>

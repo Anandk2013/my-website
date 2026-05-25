@@ -80,6 +80,7 @@ export default function BookingModal({
       setErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
     };
 
+  const enabledTypes = brand.meeting_types ?? ['video_call', 'site_visit', 'experience_center'];
   const meetingOptions = [
     {
       value: 'video_call' as MeetingType,
@@ -99,7 +100,7 @@ export default function BookingModal({
       label: 'Experience Center',
       desc: "Visit the brand's studio to see materials and finishes in person",
     },
-  ];
+  ].filter(opt => enabledTypes.includes(opt.value));
 
   function validate() {
     const e: Record<string, string> = {};

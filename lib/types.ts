@@ -26,6 +26,7 @@ export type Brand = {
   areas_served: string[]
   service_types: string[]
   design_styles: string[]
+  meeting_types: string[]
   plan_type: 'free' | 'pro'
   wallet_balance: number
   status: 'active' | 'paused' | 'pending_review' | 'rejected'
