@@ -2,11 +2,30 @@
 
 import { useEffect, useState } from "react";
 import NavAuth from "@/components/NavAuth";
+import { createClient } from "@/lib/supabase";
+import type { Brand } from "@/lib/types";
+
+const DEFAULT_GRADIENT = 'linear-gradient(135deg,#E8D5B7,#C4A77D)';
 
 export default function Designers() {
   const [localityOpen, setLocalityOpen] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('brands')
+      .select('id, slug, name, location, city, rating, review_count, logo_initials, cover_gradient, tags, plan_type, is_verified, description, address')
+      .eq('status', 'active')
+      .order('rating', { ascending: false })
+      .then(({ data }) => {
+        setBrands((data as unknown as Brand[]) ?? []);
+        setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     const searchHeader = document.getElementById('searchHeader');
@@ -49,22 +68,17 @@ export default function Designers() {
     </svg>
   );
 
-  const brands = [
-    { name: 'DesignCraft Studio', rating: '4.9', reviews: '127', location: 'Koramangala', tags: ['Contemporary', 'Full Home', 'Modular Kitchen'], bg: 'linear-gradient(135deg,#E8D5B7,#C4A77D)', emoji: '🏠', pro: true, snippet: 'Award-winning studio specializing in contemporary full-home interiors. 200+ completed projects across Bangalore with end-to-end design and execution.', meeting: ['📹 Video Call', '🏠 Site Visit'] },
-    { name: 'Livora Interiors', rating: '4.8', reviews: '94', location: 'Whitefield', tags: ['Modern', 'Luxury', 'Villa'], bg: 'linear-gradient(135deg,#B5C7D3,#8BA3B9)', emoji: '🛋️', pro: true, snippet: 'Premium interiors for luxury villas and large apartments. Known for bespoke furniture design and imported material sourcing across Whitefield and East Bangalore.', meeting: ['📹 Video Call', '🏢 Studio Visit'] },
-    { name: 'Atelier Home Design', rating: '4.7', reviews: '68', location: 'Indiranagar', tags: ['Scandinavian', 'Compact', '2/3 BHK'], bg: 'linear-gradient(135deg,#D4C5A9,#A89968)', emoji: '✨', pro: false, snippet: 'Scandinavian-inspired design studio focused on compact urban apartments. Expert at maximizing space in 2BHK and 3BHK flats with clean, functional aesthetics.', meeting: ['📹 Video Call', '🏠 Site Visit'] },
-    { name: 'SpaceWell Interiors', rating: '4.8', reviews: '112', location: 'HSR Layout', tags: ['Modular Kitchen', 'Wardrobe', 'Budget-Friendly'], bg: 'linear-gradient(135deg,#C7D5C0,#97B089)', emoji: '🍃', pro: false, snippet: 'Modular kitchen and wardrobe specialists offering factory-finished solutions. Fast delivery timelines with a 10-year warranty on all installations.', meeting: ['📹 Video Call', '🏢 Studio Visit'] },
-    { name: 'Nirmana Design Lab', rating: '4.6', reviews: '53', location: 'Jayanagar', tags: ['Traditional', 'Pooja Room', 'Custom Woodwork'], bg: 'linear-gradient(135deg,#D5BFD5,#B391B3)', emoji: '🪔', pro: false, snippet: 'Traditional Indian design studio blending heritage aesthetics with modern functionality. Specialists in pooja rooms, custom woodwork, and south Indian inspired interiors.', meeting: ['🏠 Site Visit', '🏢 Studio Visit'] },
-    { name: 'UrbanNest Studio', rating: '4.9', reviews: '86', location: 'Sarjapur Road', tags: ['Industrial', 'Full Home', 'Premium'], bg: 'linear-gradient(135deg,#C4D4E0,#8EAEC4)', emoji: '🏗️', pro: true, snippet: 'Industrial-chic design studio delivering bold, raw-finish interiors for urban professionals. Strong portfolio of loft-style apartments and tech-forward smart homes.', meeting: ['📹 Video Call', '🏠 Site Visit', '🏢 Studio'] },
-    { name: 'HomeCanvas Designs', rating: '4.7', reviews: '71', location: 'Electronic City', tags: ['Modern', 'Apartment', 'Affordable'], bg: 'linear-gradient(135deg,#E0D2C3,#C4A98A)', emoji: '🎨', pro: false, snippet: 'Affordable modern interiors for tech-park-adjacent apartments. Quick turnaround with standardized modular packages for 1BHK to 3BHK homes.', meeting: ['📹 Video Call', '🏠 Site Visit'] },
-    { name: 'Vastu Living Interiors', rating: '4.5', reviews: '39', location: 'Bannerghatta Rd', tags: ['Vastu', 'Traditional', 'Full Home'], bg: 'linear-gradient(135deg,#F2E0D0,#D4B896)', emoji: '🪑', pro: false, snippet: 'Vastu-compliant interior design combining traditional principles with modern aesthetics. In-house Vastu consultant available for every project.', meeting: ['📹 Video Call', '🏠 Site Visit'] },
-    { name: 'Zenith Décor Studio', rating: '4.4', reviews: '46', location: 'Marathahalli', tags: ['Minimalist', 'Bedroom', 'Living Room'], bg: 'linear-gradient(135deg,#DCD6E8,#B5A8CC)', emoji: '💡', pro: false, snippet: 'Minimalist design studio creating clutter-free, calming interiors. Known for clever storage solutions and lighting design in urban apartments.', meeting: ['📹 Video Call'] },
-    { name: 'Cornerstone Interiors', rating: '4.3', reviews: '32', location: 'Hebbal', tags: ['Contemporary', 'Office', 'Commercial'], bg: 'linear-gradient(135deg,#D0E4D0,#8FBD8F)', emoji: '🏢', pro: false, snippet: 'Commercial and residential interiors with a contemporary edge. Specialists in co-working spaces, home offices, and modern apartment fit-outs in North Bangalore.', meeting: ['📹 Video Call', '🏠 Site Visit'] },
-    { name: 'KitchenKraft India', rating: '4.8', reviews: '104', location: 'JP Nagar', tags: ['Modular Kitchen', 'Bathroom', 'Modern'], bg: 'linear-gradient(135deg,#F0DAD2,#D4A898)', emoji: '🍳', pro: false, snippet: 'Kitchen and bathroom renovation specialists with 500+ completed kitchens in Bangalore. German hardware, factory finish, and 45-day guaranteed delivery.', meeting: ['📹 Video Call', '🏢 Studio Visit'] },
-    { name: 'Terra Studio Bangalore', rating: '4.6', reviews: '57', location: 'Malleshwaram', tags: ['Eco-Friendly', 'Minimalist', 'Sustainable'], bg: 'linear-gradient(135deg,#E3D8C8,#C7B89A)', emoji: '🌿', pro: false, snippet: 'Eco-conscious design studio using sustainable materials and zero-VOC finishes. Experts in biophilic design bringing nature indoors for healthier living spaces.', meeting: ['📹 Video Call', '🏠 Site Visit'] },
-  ];
 
   const localities = ['Whitefield', 'Koramangala', 'Indiranagar', 'HSR Layout', 'Jayanagar', 'Marathahalli', 'Electronic City', 'Sarjapur Road', 'Bannerghatta Road', 'Hebbal', 'Yelahanka', 'JP Nagar', 'Malleshwaram', 'Rajajinagar', 'Basavanagudi'];
+
+  const filteredBrands = brands.filter(b => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return b.name.toLowerCase().includes(q) ||
+      b.location.toLowerCase().includes(q) ||
+      (b.tags ?? []).some(t => t.toLowerCase().includes(q)) ||
+      (b.description ?? '').toLowerCase().includes(q);
+  });
 
   const FilterSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="filter-section">
@@ -245,7 +259,9 @@ export default function Designers() {
         {/* MAIN */}
         <div className="main-content">
           <div className="results-meta">
-            <div className="results-count">Showing <strong>47</strong> interior brands in <strong>Bangalore</strong></div>
+            <div className="results-count">
+              {loading ? 'Loading…' : <>Showing <strong>{filteredBrands.length}</strong> interior brand{filteredBrands.length !== 1 ? 's' : ''}</>}
+            </div>
             <div className="results-view-toggle">
               <button className="view-btn active">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -261,50 +277,55 @@ export default function Designers() {
           </div>
 
           <div className="brand-list">
-            {brands.filter(brand => {
-              if (!searchQuery.trim()) return true;
-              const q = searchQuery.toLowerCase();
-              return brand.name.toLowerCase().includes(q) ||
-                brand.location.toLowerCase().includes(q) ||
-                brand.tags.some(t => t.toLowerCase().includes(q)) ||
-                brand.snippet.toLowerCase().includes(q);
-            }).map(brand => (
-              <div className={`bc-card${brand.pro ? ' pro' : ''}`} key={brand.name}>
-                <div className="bc-photo">
-                  <div className="bc-photo-placeholder" style={{background: brand.bg}}>{brand.emoji}</div>
-                  {brand.pro && <span className="bc-pro-badge">Pro Brand</span>}
-                </div>
-                <div className="bc-info">
-                  <div className="bc-header">
-                    <a href="/designers/artisan-interiors" style={{textDecoration:'none', color:'inherit'}}><span className="bc-name">{brand.name}</span></a>
-                    <span className="bc-verified"><VerifiedIcon /> Verified</span>
-                  </div>
-                  <div className="bc-rating-row">
-                    <div className="bc-stars">
-                      {[1,2,3,4,5].map(i => <StarIcon key={i} />)}
-                      <span className="bc-rating-num">{brand.rating}</span>
-                    </div>
-                    <span className="bc-reviews">{brand.reviews} reviews</span>
-                    <span className="bc-location"><PinIcon /> {brand.location}</span>
-                  </div>
-                  <div className="bc-tags">
-                    {brand.tags.map(tag => <span className="bc-tag" key={tag}>{tag}</span>)}
-                  </div>
-                  <p className="bc-snippet">{brand.snippet}</p>
-                </div>
-                <div className="bc-cta">
-                  <button className="bc-cta-btn" onClick={() => window.location.href='/designers/artisan-interiors'}>Book Free Consultation</button>
-                  <div className="bc-meeting-types">
-                    {brand.meeting.map(m => <span className="bc-mt" key={m}>{m}</span>)}
-                  </div>
-                </div>
+            {loading ? (
+              <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--ink-4)', fontSize: 15 }}>Loading brands…</div>
+            ) : filteredBrands.length === 0 ? (
+              <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--ink-4)', fontSize: 15 }}>
+                {searchQuery ? 'No brands match your search.' : 'No brands available yet. Check back soon.'}
               </div>
-            ))}
-          </div>
-
-          <div className="load-more-wrap">
-            <button className="load-more-btn">Load More Brands</button>
-            <p className="load-more-info">Showing 12 of 47 brands</p>
+            ) : filteredBrands.map(b => {
+              const isPro = b.plan_type === 'pro';
+              const meetingTypes = ['📹 Video Call', '🏠 Site Visit', ...(b.address ? ['🏢 Experience Center'] : [])];
+              const profileUrl = `/designers/${b.slug}`;
+              return (
+                <div className={`bc-card${isPro ? ' pro' : ''}`} key={b.id}>
+                  <div className="bc-photo">
+                    <div className="bc-photo-placeholder" style={{ background: b.cover_gradient ?? DEFAULT_GRADIENT }}>
+                      {b.logo_initials ?? b.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    {isPro && <span className="bc-pro-badge">Pro Brand</span>}
+                  </div>
+                  <div className="bc-info">
+                    <div className="bc-header">
+                      <a href={profileUrl} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <span className="bc-name">{b.name}</span>
+                      </a>
+                      {b.is_verified && <span className="bc-verified"><VerifiedIcon /> Verified</span>}
+                    </div>
+                    <div className="bc-rating-row">
+                      <div className="bc-stars">
+                        {[1,2,3,4,5].map(i => <StarIcon key={i} />)}
+                        <span className="bc-rating-num">{b.rating > 0 ? b.rating.toFixed(1) : 'New'}</span>
+                      </div>
+                      {b.review_count > 0 && <span className="bc-reviews">{b.review_count} reviews</span>}
+                      <span className="bc-location"><PinIcon /> {b.location}</span>
+                    </div>
+                    <div className="bc-tags">
+                      {(b.tags ?? []).map(tag => <span className="bc-tag" key={tag}>{tag}</span>)}
+                    </div>
+                    {b.description && <p className="bc-snippet">{b.description}</p>}
+                  </div>
+                  <div className="bc-cta">
+                    <button className="bc-cta-btn" onClick={() => window.location.href = profileUrl}>
+                      Book Free Consultation
+                    </button>
+                    <div className="bc-meeting-types">
+                      {meetingTypes.map(m => <span className="bc-mt" key={m}>{m}</span>)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
