@@ -130,20 +130,16 @@ export default function BookingModal({
     setOtpLoading(true);
     setOtpError('');
     try {
-      const res = await fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: form.phone }),
-      });
-      const data = await res.json();
-      if (data.ok) {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({ email: form.email });
+      if (error) {
+        setOtpError(error.message ?? 'Failed to send OTP. Please try again.');
+      } else {
         setOtpSent(true);
         setResendCooldown(30);
         const timer = setInterval(() => {
           setResendCooldown(n => { if (n <= 1) { clearInterval(timer); return 0; } return n - 1; });
         }, 1000);
-      } else {
-        setOtpError(data.message ?? 'Failed to send OTP. Please try again.');
       }
     } catch {
       setOtpError('Failed to send OTP. Check your connection.');
@@ -152,17 +148,13 @@ export default function BookingModal({
   }
 
   async function verifyOtpAndSubmit() {
-    if (otp.length !== 4) { setOtpError('Enter the 4-digit code'); return; }
+    if (otp.length !== 6) { setOtpError('Enter the 6-digit code'); return; }
     setOtpLoading(true);
     setOtpError('');
     try {
-      const res = await fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: form.phone, otp }),
-      });
-      const data = await res.json();
-      if (!data.ok) {
+      const supabase = createClient();
+      const { error } = await supabase.auth.verifyOtp({ email: form.email, token: otp, type: 'email' });
+      if (error) {
         setOtpError('Incorrect OTP. Please try again.');
         setOtpLoading(false);
         return;
@@ -241,7 +233,7 @@ export default function BookingModal({
           <>
             <div className="booking-modal-header">
               <div className="booking-modal-title">
-                {step === 'meeting' ? 'Book Free Consultation' : step === 'details' ? 'Your Details' : 'Verify Phone'}
+                {step === 'meeting' ? 'Book Free Consultation' : step === 'details' ? 'Your Details' : 'Verify Email'}
               </div>
               <button className="booking-modal-close" onClick={onClose} aria-label="Close">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -408,30 +400,30 @@ export default function BookingModal({
                 </>
               )}
 
-              {/* ── STEP 3: Verify phone ── */}
+              {/* ── STEP 3: Verify email ── */}
               {step === 'verify' && (
                 <div className="booking-verify">
                   <p className="booking-modal-subtitle">
-                    We&apos;ll send a 4-digit code to{' '}
-                    <strong>{form.phone}</strong> to confirm your booking.
+                    We&apos;ve sent a 6-digit code to{' '}
+                    <strong>{form.email}</strong>. Enter it below to confirm your booking.
                   </p>
                   {!otpSent ? (
                     <div style={{ textAlign: 'center', padding: '12px 0' }}>
                       {otpLoading
-                        ? <p className="booking-otp-status">Sending OTP…</p>
-                        : <p className="booking-otp-status">Tap Send OTP to receive your code.</p>
+                        ? <p className="booking-otp-status">Sending code…</p>
+                        : <p className="booking-otp-status">Tap Send Code to receive your verification email.</p>
                       }
                       {otpError && <div className="booking-field-error" style={{ marginTop: 8 }}>{otpError}</div>}
                     </div>
                   ) : (
                     <div className="booking-otp-block">
-                      <label className="booking-label">Enter 4-digit OTP</label>
+                      <label className="booking-label">Enter 6-digit code</label>
                       <input
                         className="booking-otp-input"
                         type="tel"
                         inputMode="numeric"
-                        maxLength={4}
-                        placeholder="- - - -"
+                        maxLength={6}
+                        placeholder="- - - - - -"
                         value={otp}
                         onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setOtpError(''); }}
                         autoFocus
@@ -442,7 +434,7 @@ export default function BookingModal({
                         disabled={resendCooldown > 0 || otpLoading}
                         onClick={sendOtp}
                       >
-                        {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
+                        {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}
                       </button>
                     </div>
                   )}
@@ -488,7 +480,7 @@ export default function BookingModal({
                   </button>
                   {!otpSent ? (
                     <button className="booking-btn-primary" disabled={otpLoading} onClick={sendOtp}>
-                      {otpLoading ? 'Sending…' : 'Send OTP'}
+                      {otpLoading ? 'Sending…' : 'Send Code'}
                     </button>
                   ) : (
                     <button
