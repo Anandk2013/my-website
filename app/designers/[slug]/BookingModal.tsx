@@ -148,7 +148,7 @@ export default function BookingModal({
   }
 
   async function verifyOtpAndSubmit() {
-    if (otp.length !== 6) { setOtpError('Enter the 6-digit code'); return; }
+    if (otp.length !== 4) { setOtpError('Enter the 4-digit code'); return; }
     setOtpLoading(true);
     setOtpError('');
     try {
@@ -404,7 +404,7 @@ export default function BookingModal({
               {step === 'verify' && (
                 <div className="booking-verify">
                   <p className="booking-modal-subtitle">
-                    We&apos;ve sent a 6-digit code to{' '}
+                    We&apos;ve sent a 4-digit code to{' '}
                     <strong>{form.email}</strong>. Enter it below to confirm your booking.
                   </p>
                   {!otpSent ? (
@@ -417,13 +417,13 @@ export default function BookingModal({
                     </div>
                   ) : (
                     <div className="booking-otp-block">
-                      <label className="booking-label">Enter 6-digit code</label>
+                      <label className="booking-label">Enter 4-digit code</label>
                       <input
                         className="booking-otp-input"
                         type="tel"
                         inputMode="numeric"
-                        maxLength={6}
-                        placeholder="- - - - - -"
+                        maxLength={4}
+                        placeholder="- - - -"
                         value={otp}
                         onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setOtpError(''); }}
                         autoFocus
