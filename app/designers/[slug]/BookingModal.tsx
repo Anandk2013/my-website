@@ -485,7 +485,7 @@ export default function BookingModal({
                   ) : (
                     <button
                       className="booking-btn-primary"
-                      disabled={otp.length !== 4 || otpLoading || loading}
+                      disabled={otp.length !== 6 || otpLoading || loading}
                       onClick={verifyOtpAndSubmit}
                     >
                       {otpLoading || loading ? 'Verifying…' : (
